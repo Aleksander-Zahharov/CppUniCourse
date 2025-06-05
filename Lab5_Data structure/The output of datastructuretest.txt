@@ -1,0 +1,75 @@
+adduser@DESKTOP-3IG9AGO:/mnt/c/Users/mohd/desktop/Homework5$ make
+g++ -Wall -std=c++11 -Iinclude -c src/Stack.cpp -o obj/Stack.o
+g++ -Wall -std=c++11 -Iinclude -c src/Queue.cpp -o obj/Queue.o
+g++ -Wall -std=c++11 -Iinclude -c src/Linkedlist.cpp -o obj/Linkedlist.o
+g++ -Wall -std=c++11 -Iinclude -c src/Node.cpp -o obj/Node.o
+g++ -Wall -std=c++11 -Iinclude -c tests/datastructuretest.cpp -o obj/datastructuretest.o
+ar cr lib/libdatastructure.a obj/Stack.o obj/Queue.o obj/Linkedlist.o obj/Node.o obj/datastructuretest.o
+adduser@DESKTOP-3IG9AGO:/mnt/c/Users/mohd/desktop/Homework5$ make test
+g++ obj/datastructuretest.o -o bin/datastructuretest -Llib -ldatastructure
+./bin/datastructuretest
+============================== Stack Test =======================
+|=====> Push elements to s1 <=====|
+613 pushed
+337 pushed
+317 pushed
+131 pushed
+809 pushed
+|=====> Sorting s1 elements into s2 <=====|
+809 pushed
+809 pushed
+131 pushed
+809 pushed
+809 pushed
+317 pushed
+809 pushed
+809 pushed
+337 pushed
+809 pushed
+809 pushed
+613 pushed
+809 pushed
+|=====> Pop sorted elements from s2 <=====|
+809 613 337 317 131
+================================= End ===============================
+============================== Queue Test ===========================
+|=====> Check Queue is empty <=====|
+Queue is empty!!
+Done!!
+|=====> Push elements to Queue <=====|
+5 2 3 4 9
+Done!!
+|=====> Check Queue is full <=====|
+Queue is full!!
+Done!!
+|=====> Display Queue elements <=====|
+Queue elements : 5      2       3       4       9
+Done!!
+|=====> Delete element <=====|
+Deleted => 5
+Done!!
+|=====> Display Queue elements <=====|
+Queue elements : 2      3       4       9
+Done!!
+|=====> Search in Queue <=====|
+3 3 9 7 7 Queue elements : 3    3       9       7       7
+Enter a number to search: 9
+9 is present at the Queue in location: 2
+
+================================= End ===============================
+========================== Linked list Test =====================
+Elements of the list are: 10 20 30 40 50 60 70 80 90
+Length list is : 9
+Elements of the list are: 10 30 40 50 60 70 80 90
+Length list is : 8
+Elements of the list are: 10 40 50 60 70 80 90
+Length list is : 7
+Elements of the list are: 10 50 60 70 80 90
+-----------------------------------------
+Index out of range
+200 is not present at the Linked list
+10 is present at the Linked List in location: 0x55cdac308750
+
+================================= End ===============================
+sh: 1: pause: not found
+adduser@DESKTOP-3IG9AGO:/mnt/c/Users/mohd/desktop/Homework5$

@@ -1,0 +1,17 @@
+Task 5 – When points are lost
+
+1. What happens when a point that is pointed by lines is destroyed?
+	If a point that is pointed to by one or more 'DynamicLine' objects is destroyed, the pointers in those lines will become dangling pointers.
+	This means that the 'DynamicLine' objects will still hold memory addresses that no longer point to valid objects.
+	Accessing these dangling pointers can lead to undefined behavior, such as crashes or corrupted data.
+
+2. How could the point destructor know in which lines it is included?
+	To allow a point to know which lines are referencing it, we could maintain a registry or listof 'DynamicLine' objects that reference the point.
+	Each 'DynamicLine' object would register itself with the points it references during construction or assignment.
+	Similarly, it would unregister itself when it is destroyed or reassigned.
+	This way, the point would have a list of all 'DynamicLine' objects that depend on it.
+
+3. What could the point destructor do to fix the situation?
+	When a point is destroyed, its destructor could iterate through the list of registered 'DynamicLine' objects and notify them that the point is no longer valid.
+	The 'DynamicLine' objects could then set their pointers to 'nullptr' or take other appropriate actions to handle the invalid reference.
+	This approach ensures that the 'DynamicLine' objects are aware of the change and can avoid accessing invalid memory.

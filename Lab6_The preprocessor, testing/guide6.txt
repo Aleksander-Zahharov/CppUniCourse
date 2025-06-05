@@ -1,0 +1,256 @@
+Programming in C++
+Lab 6 – The preprocessor, testing
+The preprocessor
+Compiling a C(++) source code into machine code is actually a multi-step process. A good overview can be found here. We are particularly interested in step 4, where the preprocessor is executed. Notice that this is done at compile time before the actual compilation, so there is no runtime execution of the preprocessor. Performance is typically a reason why the preprocessor is used.
+
+All preprocessor directives start with # - you have probably seen a number of examples in the module. We want to have a closer look here and make sure you understand what happens. # is followed by a preprocessor directive (a command, but they are called directives here) and potentially arguments (there are no brackets or similar, arguments are just separated by spaces). The preprocessor is typically used for the following purposes:
+
+include
+A statement like #include file gets replaced by the full content of file. We have used this to include header files, which enable the compilation of file using functions from a header. Note that the preprocessor literally copies the included file (and removes the #include, of course), so this is different from any using, which has to do with namespaces (see below). Also constructs like import in Java are different, since this only saves writing full package names, but does not include any code in a compilation unit or similar. The filename can be either enclosed in "", indicating a normal (relative or absolute) path, or in <>, indicating the system header location or the -I option (we used this in Lab 4).
+
+defining constants
+Strictly speaking, these are macros (see below). A macro like
+
+#define ABCD 2
+
+defines a constant ABCD with value 2. This is used to create constants which do not exit in C or c++ (or the version used). A typical example is the null value which did not exist till C++ 11. Instead of using 0, often a macro like this was used:
+
+#define NULL 0
+//since C++11
+#define NULL nullptr
+NULL can then be used and makes it clear what is meant.
+
+conditionals
+Code compilation can be conditional, using a type of if/else statements:
+
+#define ABCD 2
+#include <iostream>
+ 
+int main()
+{
+ 
+#ifdef ABCD
+    std::cout << "1: yes\n";
+#else
+    std::cout << "1: no\n";
+#endif
+ 
+#ifndef ABCD
+    std::cout << "2: no1\n";
+#elif ABCD == 2
+    std::cout << "2: yes\n";
+#else
+    std::cout << "2: no2\n";
+#endif
+ 
+#if !defined(DCBA) && (ABCD < 2*4-3)
+    std::cout << "3: yes\n";
+#endif
+ 
+ 
+// Note that if a compiler does not support C++23's #elifdef/#elifndef
+// directives then the "unexpected" block (see below) will be selected.
+#ifdef CPU
+    std::cout << "4: no1\n";
+#elifdef GPU
+    std::cout << "4: no2\n";
+#elifndef RAM
+    std::cout << "4: yes\n"; // expected block
+#else
+    std::cout << "4: no!\n"; // unexpectedly selects this block by skipping
+                             // unknown directives and "jumping" directly
+                             // from "#ifdef CPU" to this "#else" block
+#endif
+ 
+// To fix the problem above we may conditionally define the
+// macro ELIFDEF_SUPPORTED only if the C++23 directives
+// #elifdef/#elifndef are supported.
+#if 0
+#elifndef UNDEFINED_MACRO
+#define ELIFDEF_SUPPORTED
+#else
+#endif
+ 
+#ifdef ELIFDEF_SUPPORTED
+    #ifdef CPU
+        std::cout << "4: no1\n";
+    #elifdef GPU
+        std::cout << "4: no2\n";
+    #elifndef RAM
+        std::cout << "4: yes\n"; // expected block
+    #else
+        std::cout << "4: no3\n";
+    #endif
+#else // when #elifdef unsupported use old verbose `#elif defined`
+    #ifdef CPU
+        std::cout << "4: no1\n";
+    #elif defined GPU
+        std::cout << "4: no2\n";
+    #elif !defined RAM
+        std::cout << "4: yes\n"; // expected block
+    #else
+        std::cout << "4: no3\n";
+    #endif
+#endif
+}
+Notice this is different from else/if in C++ proper: The statements are not evaluated at runtime, but during compilation. Only some parts of the code actually make it in the program. This can be used to include e.g. debug statements which depend on a debug flag. If debug is off, there is no evaluation of ifs needed at runtime.
+
+Macros
+A macro is a similar to a function which is processed by the preprocessor. It replaces "calls" to the macro with copies of the macro. In contrast, functions are called at runtime, including new scope for variables etc. Macros become duplicated code once the preprocessor has done its job, but are not duplicated in the actual source code.
+
+We have used macros for testing so far:
+
+#define TEST2(a,b1,c1,b2,c2) cout << "Test " << ++testcount << ". " << a << ": " << ((cmpf(b1,b2) && cmpf(c1,c2)) ? "OK" :"FAIL") << endl
+ 
+bool cmpf (float a, float b) {
+    if (fabs (a - b) < 0.001f)
+        return true;
+    return false;
+}
+ 
+int main (int argc, char* argv[]) {
+    // Require default constructor
+    Point2 v1{5.5,6.6};
+    Point2 v2(4.4,5.5);
+    TEST2("Point2 vaikekonstruktor v1(0,0)", v1.x, v1.y, 0, 0);
+    Point2 v2 {1.0, -1.0};
+    TEST2("Point2 konstruktor v2(1,-1)", v2.x, v2.y, 1, -1);
+}
+Here, the line #define TEST2(a,b1,c1,b2,c2) cout << "Test " << ++testcount << ". " << a << ": " << ((cmpf(b1,b2) && cmpf(c1,c2)) ? "OK" :"FAIL") << endl defines a macro called test which has five parameters (notice the parameters of the macro are in (), the parameters of the directive are not). After the ), there is the command which is used for replacement. This is C(++) code, where each parameter will be replaced by it's value. For example, TEST2("Point2 vaikekonstruktor v1(0,0)", v1.x, v1.y, 0, 0); becomes cout << "Test " << ++testcount << ". " << "Point2 vaikekonstruktor v1(0,0)" << ": " << ((cmpf(v1.x,0) && cmpf(v1.y,0)) ? "OK" :"FAIL") << endl which is a valid C command ready to be compiled. We will look at testing below, but the idea is that we compare two floats to their expected values and return OK or FAIL. Note the compare cannot use == for floats due to the inherent precision problems of floats.
+
+There can also be optional arguments and there are predefined macros (e.g. __TIME__ translates to the time of compilation - not execution).
+
+In the header files, we used the preprocessor to prevent multiple inclusion of the same header bya accident:
+
+#ifndef FILE_H
+#define FILE_H
+ 
+/* ... Declarations etc here ... */
+ 
+#endif
+The #ifndef checks if a macro is already defined, only if not, the following section is included. Since the definition of FILE_H is in the ifndef, the content will be included exactly once (you are probably not surprised that #ifdef exists as well).
+
+Testing
+General strategies
+Quality assurance is an important (and fundamentally unsolved) issue in software development. One useful strategy (but by no means the only one) is testing. Of course you have all done testing - after writing code, you typically run it and check if it works. That is of course fine, but not the best use of testing. Here we will look at strategies to improve the efficiency of testing. Please note that, even though good testing is good, testing can never proof the correctness of code or teh absensce of any errors or bugs. Of course, this does not mean testing cannot be part of a software quality strategy. There are a few issues to deal with when testing, which we dicuss here. Also, one requirement for testing is a good specification - if we do not know what our software is supposed to do, testing cannot really work.
+
+Level of testing
+Firstly, we need to decide on which level(s) to test. That could be the overall application. On the one hand, this is useful because the application will be used, so its working needs to be tested. On the other hand, it is often difficult to do (think about GUI applications, distributed applications) and the results are not meaningful for debugging (which is needed once a fault has been discovered). Another alternative is to test on lower levels, for example functions or methods (or modules or any other functional unit which exists in the program). This is called unit testing. We focus on unit testing of functions or methods here. Even if all of them have been well tested, it does not make integration tests unnecessary - the integration can lead to problems not visible in individual units.
+
+Test coverage
+You have probably noticed that a program behaves differently with different inputs. So ideally as many inputs as possible should be tested. Unfortunately, testing a large number of inputs, let alone all possible inputs, is not practical. Instead of using a random selection of inputs, the use of equivalence classes is a possbility.
+
+For this, we divide the input values into a number of subsets. Each of them is an equivalence class since the division should be done so that all members of a class show the same behaviour. Of course this is not easy to judge, but if the classes are done properly, it means we can cover all of the inputs with a few tests. The classes must be disjoint (a value cannot be a member of two classes) and their union must cover all inputs (there cannot be values which are in no class). Strictly speaking, there is a mathematical theory behind this, but we do not need that.
+
+Some practical examples:
+
+Input is an integer: Possible equivalence classes are negtive number, 0 (one member only), and positive numbers.
+Input is a boolean: true and false are the only possible classes, both have one member only.
+Input is an integer and a boolean: Possible equivalence classes are the combinations of the three integer classes with true and false each, i.e. six equivalence classes.
+Input is an address: This is not so easy, but it would make sense to use divisions like domestic and foreign addresses or addresses from EU and non-EU countries or addresses from different continents. Potentially, a division by countries of the earth (a finite set) could be an option as well.
+Experience shows that often code fails along the border cases. If the input is an int and there is an if condition to distinguish to subsets, it is easy to use < instead of <= or say "if x<100" where 100 should be part of the if branch. This leads to boundary value analysis (BVA), where a typical value is tested and the boundary values. So for our integer equivalence classes, we would get those test values:
+
+Equivalence class	Negative numbers	0	Positive numbers
+Test values	Integer.MIN, -10, -1	0	1,10,Integer.MAX
+Altogether we have seven test cases and we can be fairly confident our code is correct if they all work.
+
+Sometimes there are values which are technically possible, but are not allowed as inputs (e.g. a functions accepts int as type, but only numbers from -100 to 100 are allowed. In such cases, the invalid values should still be tested (for throwing an execption or whatever is the expected reaction), possibly as one or several equivalence classes. In the example, we would probably get this:
+
+Equivalence class	Invalid negative numbers	Valid negative numbers	0	Valid positive numbers	Invalid positive numbers
+Test values	Integer.MIN, -1000, -101	-100, -10, -1	0	1,10,100	101,1000,Integer.MAX
+There are other systematic (e.g. code coverage) or ad-hoc ways (add a test for every fixed bug etc.) to design test cases, so this is not an exhaustive treatment.
+
+Execution of test
+So we know which tests we want to execute. Doing this manually is possible, but tiresome. And there is a risk of missing wrong values. In the end, executing those tests and checking the results is a repetitive task, and we should better leave it to the computer. That means we can run tests frequently and effortlessly. Continuous integration takes the concept even a step further by also automating the triggering of test. A test first approach, where tests are written before the code is also a possibility (we used this in some of the homework).
+
+In the homework, we have used macros to run tests. The macros were written to accept a function call and an exptected value and checked one against the other. Those macros are not very flexible though - you may wish to test a variety of things, not only if two values match. Also it would be nice to get some sort of statistical overview of results. This is possible by using unit test libraries, which exist in many programming languages today.
+
+Testing libraries in C++
+We are using doctest (https://github.com/onqtam/doctest) here. It should be noted that there are other frameworks (e.g. google test), but doctest has a good set of features and is easy to use. Installation of doctest is easy, just download the file https://raw.githubusercontent.com/doctest/doctest/master/doctest/doctest.h and put it into your project.
+
+A simple example for a unit to test and its tests is this:
+
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include "doctest.h"
+int fact(int n) {
+    return n <= 1 ? n : fact(n - 1) * n;
+}
+TEST_CASE("testing the factorial function") {
+    CHECK(fact(0) == 1); // should fail
+    CHECK(fact(1) == 1);
+    CHECK(fact(2) == 2);
+    CHECK(fact(3) == 6);
+    CHECK(fact(10) == 3628800);
+}
+Here we have:
+
+A function/unit to test (fact)
+A test case, with a number of assertions where fact is called with a defined input and the expected outcome is given.
+This can be compiled and run. It should produce a nice output similar to this:
+
+[doctest] doctest version is "2.4.11"
+[doctest] run with "--help" for options
+===============================================================================
+test.cpp:6:
+TEST CASE:  testing the factorial function
+
+test.cpp:7: ERROR: CHECK( fact(0) == 1 ) is NOT correct!
+  values: CHECK( 0 == 1 )
+
+===============================================================================
+[doctest] test cases: 1 | 0 passed | 1 failed | 0 skipped
+[doctest] assertions: 5 | 4 passed | 1 failed |
+[doctest] Status: FAILURE!
+In this example, there is an error (given our test are testing what we think they should test). Once we correct it (how?), all tests work. These tests can now easily be rerun.
+
+doctest mostly uses the CHECK assertion. There are more options, in particular it is also possible to test if an exception is thrown. See https://github.com/doctest/doctest/blob/master/doc/markdown/assertions.md for details.
+
+It is a principle in doctest that tests are written in and as part of normal code. Other frameworks have different approaches, they have tests separated into their classes or packages.
+
+If your project consists of several cpp files, you can put tests in any of them. Each needs an #include "doctest.h". Once compiled, running the executable runs all tests and you get an overall result.
+
+Notice so far we were testing libraries - there were no main methods in our files. When we ran the resulting executable, a main method was provided by doctest. What if there is a main method in our program? We can actually have our own main method and run either only that or only the tests or both:
+
+#define DOCTEST_CONFIG_IMPLEMENT
+#include "doctest.h"
+int main(int argc, char** argv) {
+    doctest::Context ctx;
+    ctx.setOption("abort-after", 5);  // default - stop after 5 failed asserts
+    ctx.applyCommandLine(argc, argv); // apply command line - argc / argv
+    ctx.setOption("no-breaks", true); // override - don't break in the debugger
+    int res = ctx.run();              // run test cases unless with --no-run
+    if(ctx.shouldExit())              // query flags (and --exit) rely on this
+        return res;                   // propagate the result of the tests
+    // your actual program execution goes here - only if we haven't exited
+    return res; // + your_program_res
+}
+In this example, you can also see some options to use. Of course there is more. See the tutorial and references for details.
+
+Secure programming
+Security is a major concern in the IT sector. This includes higher level issue like network access or physical access, which are out scope of this module. There are also lower level security concerns, though. This is particularly true for programming in C(++), since many checks, which are performed in other languages, are not included in C(++). An example we have seen for this is array access, where something like an "out of bounds exception" does not exist in C++. This is called a buffer overflow. The main reason for this is performance - a C++ compiler translates exactly what the program says to machine code and nothing else. Buffer overflows can happen in relatively subtle ways:
+
+void copy(const char *x){
+  char *y = malloc(strlen(x));
+  strcpy(y,x);
+}
+Can you spot the issue? A nice treatment of what to do is found here.
+
+GCC can actually do some checks at runtime. The compiler flag -D_FORTIFY_SOURCE=3 introduces some checks. There are a number of other flags which can be useful, the most common one probably being -Wall (which you saw in our make files), which make the compiler print out warnings.
+
+An in-depth treatment of security issues is found at https://wiki.sei.cmu.edu/confluence/pages/viewpage.action?pageId=88046682.
+
+Of course security is a wider issue and is related to many other topics, including project management, coding style, maintenance and others. It really starts with requirements and definitions - if it is unclear what a program is actually supposed to do, how can it be safe or secure?
+
+Namespaces
+Namespaces are a way to avoid name conflicts. For example, classes with the same name can be used at the same time as long as they are in separate namespaces. For declaring namespaces, the syntax is:
+
+namespace Q
+{
+    namespace V   // V is a member of Q, and is fully defined within Q
+    { // namespace Q::V {
+        void f(); // f is a member of Q::V
+    }
+}
+Namespaces are different from compilation units or files, there can be more than one namespace in one file etc.
+
+To use elements of a namespace, either a fully qualified name must be used Q::V::f() or a using at the beginning of a file makes the elements of the namespace visible using namespace Q::V; ... f().

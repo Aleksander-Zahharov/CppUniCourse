@@ -1,0 +1,57 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "(!Make) Build with Makefile",
+            "type": "shell",
+            "command": "make",
+            "group": "build",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "(!Make) (Build and) Run Tests!",
+            "type": "shell",
+            "command": "make test",
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "Build Project (without Makefile)!",
+            "type": "shell",
+            "command": "C:\\msys64\\ucrt64\\bin\\g++.exe",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-g",
+                "src/point2.cpp",
+                "src/line2.cpp",
+                "src/circle2.cpp",
+                "tests/geometrytest.cpp",
+                "-Iinclude",
+                "-o",
+                "bin/geometrytest.exe"
+            ],
+            "group": "build",
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "detail": "Task to build the entire project WITHOUT MAKEFILE"
+        },
+        {
+            "label": "Run Executable (without Makefile) (just runs bin/geometrytest.exe)!",
+            "type": "shell",
+            "command": "${workspaceFolder}\\bin\\geometrytest.exe",
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        }
+    ]
+}

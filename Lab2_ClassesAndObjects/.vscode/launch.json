@@ -1,0 +1,71 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Build with Makefile",
+            "type": "cppdbg",
+            "request": "launch",
+            "preLaunchTask": "Build with Makefile",
+            "program": "${workspaceFolder}/bin/geometrytest",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "miDebuggerPath": "/usr/bin/gdb",
+            "logging": {
+                "engineLogging": true
+            },
+            "pipeTransport": {
+                "pipeCwd": "",
+                "pipeProgram": "C:\\msys64\\usr\\bin\\bash.exe",
+                "pipeArgs": ["-c"],
+                "debuggerPath": "/usr/bin/gdb"
+            },
+            "sourceFileMap": {
+                "/mnt/c": "c:\\"
+            }
+        },
+        {
+            "name": "Run Tests",
+            "type": "cppdbg",
+            "request": "launch",
+            "preLaunchTask": "Run Tests",
+            "program": "${workspaceFolder}/bin/geometrytest",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "miDebuggerPath": "/usr/bin/gdb",
+            "logging": {
+                "engineLogging": true
+            },
+            "pipeTransport": {
+                "pipeCwd": "",
+                "pipeProgram": "C:\\msys64\\usr\\bin\\bash.exe",
+                "pipeArgs": ["-c"],
+                "debuggerPath": "/usr/bin/gdb"
+            },
+            "sourceFileMap": {
+                "/mnt/c": "c:\\"
+            }
+        }
+    ]
+}
